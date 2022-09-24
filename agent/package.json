@@ -1,0 +1,23 @@
+{
+  "name": "rose-supply-agent",
+  "version": "1.0.0",
+  "license": "MIT",
+  "main": "bin/rose-supply-agent.js",
+  "scripts": {
+    "build": "tsc -b && esbuild src/index.ts --bundle --outfile=bin/rose-supply-agent.js --platform=node --minify"
+  },
+  "dependencies": {
+    "@oasisprotocol/sapphire-paratime": "^1.0.5",
+    "ethers": "^5.7.1",
+    "express": "^4.18.1",
+    "rose-supply-contracts": "link:../contracts"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.38.0",
+    "@typescript-eslint/parser": "^5.38.0",
+    "esbuild": "^0.15.9",
+    "eslint": "^8.24.0",
+    "eslint-config-prettier": "^8.5.0",
+    "typescript": "^4.8.3"
+  }
+}
