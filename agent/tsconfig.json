@@ -1,12 +1,13 @@
 {
   "include": ["src"],
   "compilerOptions": {
-    "esModuleInterop": true
-    "lib": ["es2021"],
+    "esModuleInterop": true,
+    "lib": ["es2021", "dom"],
     "module": "commonjs",
     "moduleResolution": "node",
+    "noEmit": true,
     "outDir": "bin/",
     "strict": true,
-    "target": "es2021",
+    "target": "es2021"
   }
 }
