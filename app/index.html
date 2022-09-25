@@ -166,12 +166,11 @@
         <h2>Accountability</h2>
         <p>
           The faucet is a <a href="https://github.com/nhynes/rose.supply/blob/main/contracts/contracts/FaucetV1.sol" target="_blank">contract</a> controlled by an off-chain <a href="https://github.com/nhynes/rose.supply/blob/main/agent/src/index.ts" target="_blank">agent</a>.
-          The contract holds all of the funds, but the agent decides when and how to disburse them.
+          The contract holds all of the funds, but the agent decides who to award them to.
         </p>
         <p>
           Although the agent must be trusted to enqueue requests, it cannot deplete the donation pool because the maximum payout is <a href="https://github.com/nhynes/rose.supply/blob/main/contracts/contracts/FaucetV1.sol#L68" target="_blank">capped</a> and the number of payouts per day is also <a href="https://github.com/nhynes/rose.supply/blob/main/contracts/contracts/FaucetV1.sol#L76" target="_blank">capped</a>.
-          The worst that can happen is the payout caps getting set to zero or the agent disappearing.
-          There's not much incentive for either of those things, though.
+          The worst that can happen is the payout caps getting set to zero or the agent disappearing, but there's not much incentive for either of those things.
         </p>
       </section>
       <section>
