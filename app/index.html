@@ -79,6 +79,9 @@
       color: #afafaf;
       background-color: #1a1a1a;
     }
+    body, main {
+      box-sizing: border-box;
+    }
     h1,h2,h3 {
       font-weight: normal;
     }
@@ -98,6 +101,9 @@
     a {
       color: #afafaf;
     }
+    section {
+      padding: 0 3%;
+    }
     </style>
   </head>
   <body>
@@ -107,11 +113,11 @@
         ROSE Supply is a Mainnet faucet for the Oasis Sapphire ParaTime.
       </h2>
     </header>
-    <main style="max-width:60ch;margin:auto;display:flex;flex-direction:column;margin-top:40px;">
-      <form style="border:3px solid #aaa;margin:auto;padding:30px;border-radius:10px;">
-        <label>
+    <main style="max-width:60ch;width:100%;margin:auto;margin-top:40px">
+      <form style="border:3px solid #aaa;margin:auto;padding:5%;border-radius:10px;width:85%">
+        <label style="line-height:1.5em">
           <span>Address:</span>&nbsp;
-          <input size="42" type="text" name="address" placeholder="0x..." pattern="0x[A-Fa-f0-9]{40}" required />
+          <input style="max-width:42ch;width:100%;" type="text" name="address" placeholder="0x..." pattern="0x[A-Fa-f0-9]{40}" required />
         </label>
         <div
           style="width:302px;height:76px"
@@ -127,7 +133,7 @@
         Preserve this service by sending ROSE to the faucet contract
         <a style="color:orchid" href="https://testnet.explorer.sapphire.oasis.dev/address/0xd5D44cFdB2040eC9135930Ca75d9707717cafB92" target="_blank"><span style="text-align:center;display:block;margin:auto;font-family:monospace">0xd5D44cFdB2040eC9135930Ca75d9707717cafB92</span></a>
       </p>
-      <hr style="width:100%;margin:10px auto;"/>
+      <hr style="width:95%;margin:10px auto;"/>
       <section>
         <h2>Why?</h2>
         <p>
@@ -142,10 +148,10 @@
       <section>
         <h2>Privacy</h2>
         <p>
-          This service does not store personal information like IP address, but your ISP, your browser extensions, Cloudflare, GCP, hCaptcha, or the Sapphire Web3 gateway might. This list is not-exhaustive.
+          This service does not store identifying information like IP address, but your ISP, your browser extensions, Cloudflare, GCP, hCaptcha, or the Sapphire Web3 gateway might. This list is non-exhaustive.
         </p>
         <p>
-          This service does not store your wallet address, but it will necessarily be posted to a public ledger and may be easily linked to any exposed personal identity.
+          This service must post your wallet address to a public ledger where it may be easily linked with any exposed identifying information.
         </p>
       </section>
       <section>
