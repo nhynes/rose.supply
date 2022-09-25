@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract FaucetV1 is Ownable {
+    uint256 private constant SECONDS_IN_DAY = 24 * 60 * 60;
+
     /// Enough to make an ERC-20 transfer at 100 Gwei per gas.
     uint256 public _payout = 0.0025 ether;
     uint256 public _maxDailyPayouts = 400;
@@ -22,13 +24,13 @@ contract FaucetV1 is Ownable {
     function payoutBatch(address payable[] calldata recipients) external {
         if (_payout == 0) return;
         require(_agents[msg.sender], "not agent");
-        uint256 today = block.timestamp / 60 / 60 / 24;
+        uint256 today = block.timestamp / SECONDS_IN_DAY;
         uint256 payoutsToday = _payoutsToday[today];
         uint256 numPayouts = payoutsToday + recipients.length > _maxDailyPayouts
             ? _maxDailyPayouts - payoutsToday
             : recipients.length;
         require(numPayouts > 0, "dry");
-        _payoutsToday[today] += numPayouts;
+        _payoutsToday[today] = payoutsToday + numPayouts;
         for (uint256 i = 0; i < numPayouts; ++i) {
             recipients[i].transfer(_payout);
         }
