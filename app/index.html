@@ -30,7 +30,14 @@
       $status.innerText = '';
       if (!hCaptchaToken) {
         $status.classList.add('error');
-        $status.innerText = "Please complete the hCaptcha."
+        $status.innerText = "Please complete the hCaptcha.";
+        return;
+      }
+
+      const dateKey = new Date().toDateString();
+      if (localStorage[dateKey]) {
+        $status.classList.add('error');
+        $status.innerText = "You have already been funded today.";
         return;
       }
 
@@ -39,16 +46,17 @@
         const res = await fetch('https://api.rose.supply/request', {
           method: 'POST',
           headers: {
-            'content-type': 'application/json'
+            'content-type': 'application/json',
           },
           body: JSON.stringify({
-              address: $address.value,
-              token: hCaptchaToken
+            address: $address.value,
+            token: hCaptchaToken,
           }),
         });
         if (res.ok) {
-        $status.classList.add('success');
-          $status.innerText = "Funding request submitted. Please wait for your tokens to arrive. If they do not, please try again later."
+          localStorage[dateKey] = true;
+          $status.classList.add('success');
+          $status.innerText = "Your tokens should arrive soon. If not, please try again later.";
           return;
         }
         try {
