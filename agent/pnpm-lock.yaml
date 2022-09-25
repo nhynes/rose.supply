@@ -14,6 +14,7 @@ specifiers:
   eslint-config-prettier: ^8.5.0
   ethers: ^5.7.1
   express: ^4.18.1
+  hcaptcha: ^0.1.1
   rose-supply-contracts: link:../contracts
   typescript: ^4.8.3
 
@@ -22,6 +23,7 @@ dependencies:
   cors: 2.8.5
   ethers: 5.7.1
   express: 4.18.1
+  hcaptcha: 0.1.1
   rose-supply-contracts: link:../contracts
 
 devDependencies:
@@ -1546,6 +1548,10 @@ packages:
     dependencies:
       inherits: 2.0.4
       minimalistic-assert: 1.0.1
+    dev: false
+
+  /hcaptcha/0.1.1:
+    resolution: {integrity: sha512-iMrDmH2VpIEKOrcKWidVjI89FdDKTEdZ7PfPWkP27sTazIIkob8YfdY2ezaufAnWBiUUcvzsn0qF+dyXtBH2Vw==}
     dev: false
 
   /hmac-drbg/1.0.1:
