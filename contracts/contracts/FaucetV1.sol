@@ -1,22 +1,34 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-
-contract FaucetV1 is Ownable {
+contract FaucetV1 {
     uint256 private constant SECONDS_IN_DAY = 24 * 60 * 60;
 
     /// Enough to make an ERC-20 transfer at 100 Gwei per gas.
-    uint256 public _payout = 0.0025 ether;
-    uint256 public _maxDailyPayouts = 400;
+    uint256 public _payout = 0.003 ether;
+    uint256 public _maxDailyPayouts = 500;
     mapping(uint256 => uint256) public _payoutsToday;
     mapping(address => bool) public _agents;
+
+    address public _admin;
+    address public _proposedAdmin;
+    uint256 public _newAdminStartTime;
 
     event Donation(address from, uint256 amount, bytes message);
     event AgentsAuthorized(address[] agents);
     event AgentsDeauthorized(address[] formerAgents);
 
-    constructor() payable {} // solhint-disable-line no-empty-blocks
+    event AdminProposed(address newAdmin, uint256 startTime);
+    event AdminChanged(address newAdmin);
+
+    constructor() payable {
+        _admin = msg.sender;
+    }
+
+    modifier onlyAdmin() {
+        require(msg.sender == _admin, "not admin");
+        _;
+    }
 
     /// Pays out the `_payout` to the recipients.
     /// The caller must ensure that no recipients are contracts.
@@ -48,7 +60,7 @@ contract FaucetV1 is Ownable {
         emit Donation(msg.sender, msg.value, bytes(""));
     }
 
-    function authorizeAgents(address[] calldata agents) external onlyOwner {
+    function authorizeAgents(address[] calldata agents) external onlyAdmin {
         for (uint256 i = 0; i < agents.length; ++i) {
             _agents[agents[i]] = true;
         }
@@ -57,7 +69,7 @@ contract FaucetV1 is Ownable {
 
     function deauthorizeAgents(address[] calldata formerAgents)
         external
-        onlyOwner
+        onlyAdmin
     {
         for (uint256 i = 0; i < formerAgents.length; ++i) {
             delete _agents[formerAgents[i]];
@@ -66,16 +78,35 @@ contract FaucetV1 is Ownable {
     }
 
     /// Allows updating the payout if the minimum gas price changes.
-    function adjustPayout(uint256 newPayout) external onlyOwner {
+    function adjustPayout(uint256 newPayout) external onlyAdmin {
         require(newPayout <= 0.01 ether, "too generous");
         _payout = newPayout;
     }
 
     function adjustMaxDailyPayout(uint256 newMaxDailyPayouts)
         external
-        onlyOwner
+        onlyAdmin
     {
         require(newMaxDailyPayouts < 20_000, "too generous");
         _maxDailyPayouts = newMaxDailyPayouts;
+    }
+
+    function proposeNewAdmin(address newAdmin) external onlyAdmin {
+        uint256 startTime = newAdmin != address(0)
+            ? block.timestamp + 7 days
+            : type(uint256).max;
+        _newAdminStartTime = startTime;
+        _proposedAdmin = newAdmin;
+        emit AdminProposed(newAdmin, startTime);
+    }
+
+    function acceptAdminRole() external {
+        require(msg.sender == _proposedAdmin, "not proposed");
+        require(block.timestamp >= _newAdminStartTime, "not time");
+        address newAdmin = _proposedAdmin;
+        _admin = newAdmin;
+        delete _proposedAdmin;
+        delete _newAdminStartTime;
+        emit AdminChanged(newAdmin);
     }
 }

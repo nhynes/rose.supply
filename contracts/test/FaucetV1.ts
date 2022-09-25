@@ -46,7 +46,7 @@ describe('FaucetV1', () => {
 
   it('add agent unauthorized', async () => {
     await expect(faucetByAgent.authorizeAgents([])).to.be.revertedWith(
-      'Ownable: caller is not the owner',
+      'not admin',
     );
   });
 
