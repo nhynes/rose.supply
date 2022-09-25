@@ -2,7 +2,7 @@ import * as sapphire from '@oasisprotocol/sapphire-paratime';
 import cors from 'cors';
 import { CronJob } from 'cron';
 import { ethers } from 'ethers';
-import express, { Request, Response } from 'express';
+import express, { Response } from 'express';
 import * as hcaptcha from 'hcaptcha';
 
 import { FaucetV1, FaucetV1__factory } from 'rose-supply-contracts';
@@ -82,7 +82,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: 'rose.supply',
+    origin: 'https://rose.supply',
     methods: 'POST',
     allowedHeaders: ['content-type'],
     maxAge: 30 * 24 * 60 * 60,
@@ -94,9 +94,15 @@ function err(res: Response, status: number, msg: string) {
   res.status(status).json({ error: msg }).end();
 }
 
+app.get('/request', (_req, res) => err(res, 405, 'method not allowed'));
+
 app.post('/request', async (req, res) => {
   const cfIp = req.headers['cf-connecting-ip'] as string;
   const { token, address } = req.body;
+  if (!token) return err(res, 400, 'missing `token`');
+  if (typeof address !== 'string' || !ethers.utils.isAddress(address)) {
+    return err(res, 400, 'missing or invalid `address`');
+  }
   try {
     const { success } = await hcaptcha.verify(
       hcaptchaSecret,
@@ -104,34 +110,27 @@ app.post('/request', async (req, res) => {
       cfIp,
       HCAPTCHA_SITEKEY,
     );
-    if (!success) throw new Error('hcaptcha failed');
+    if (!success) throw new Error('hCaptcha failed');
   } catch (e: any) {
-    return err(res, 401, 'hcaptcha failed');
+    return err(res, 401, 'hCaptcha failed');
   }
-  if (typeof address !== 'string' || !ethers.utils.isAddress(address)) {
-    return err(res, 400, 'missing or invalid `address`');
-  }
-  if (!agent.mayRequest(cfIp, address)) return err(res, 429, 'already funded');
+  if (!agent.mayRequest(cfIp, address))
+    return err(res, 429, 'you have already been funded');
   try {
     const [code, balance] = await Promise.all([
       provider.getCode(address),
       provider.getBalance(address),
     ]);
     if (code !== '0x' && code !== '')
-      return err(res, 400, 'recipient may not be a contract');
+      return err(res, 400, 'the recipient may not be a contract');
     if (balance >= ethers.utils.parseEther('.01'))
-      return err(res, 400, 'recipient is too rich');
+      return err(res, 400, 'the recipient is too rich');
   } catch (e) {
     console.error('failed to check recipient', e);
-    return err(res, 500, 'internal server error');
+    return err(res, 502, 'bad gateway');
   }
   agent.addRequest(cfIp, address);
   res.status(204).end();
-});
-
-app.use((e: unknown, _req: Request, res: Response) => {
-  console.error(e);
-  return err(res, 500, 'internal server error');
 });
 
 app.listen(80);
