@@ -72,6 +72,8 @@ task(TASK_ADD_AGENT, 'Authorizes a new agent.')
     await tx.wait();
   });
 
+const privateKey = process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
+
 const config: HardhatUserConfig = {
   solidity: {
     version: '0.8.17',
@@ -84,19 +86,25 @@ const config: HardhatUserConfig = {
     },
   },
   networks: {
+    'emerald-testnet': {
+      url: 'https://testnet.emerald.oasis.dev',
+      chainId: 0x0a515,
+      accounts: privateKey,
+    },
+    'emerald-mainnet': {
+      url: 'https://emerald.oasis.dev',
+      chainId: 0xa516,
+      accounts: privateKey,
+    },
     'sapphire-testnet': {
       url: 'https://testnet.sapphire.oasis.dev',
-      accounts: process.env.SAPPHIRE_TESTNET_PRIVATE_KEY
-        ? [process.env.SAPPHIRE_TESTNET_PRIVATE_KEY]
-        : [],
       chainId: 0x5aff,
+      accounts: privateKey,
     },
     'sapphire-mainnet': {
       url: 'https://sapphire.oasis.dev',
-      accounts: process.env.SAPPHIRE_MAINNET_PRIVATE_KEY
-        ? [process.env.SAPPHIRE_MAINNET_PRIVATE_KEY]
-        : [],
       chainId: 0x5afe,
+      accounts: privateKey,
     },
   },
   watcher: {

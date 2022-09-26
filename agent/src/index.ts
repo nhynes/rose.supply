@@ -9,42 +9,47 @@ import { FaucetV1, FaucetV1__factory } from 'rose-supply-contracts';
 
 const HCAPTCHA_SITEKEY = 'fd74b3a8-7fac-467f-be40-5c525e79ac83';
 
+const fundedToday = new Set<string>(); // wallet address
+const accessedToday = new Set<string>(); // ip address
+
+new CronJob(
+  '0 0 * * *',
+  () => {
+    fundedToday.clear();
+    accessedToday.clear();
+  },
+  undefined,
+  true,
+  undefined,
+  undefined,
+  false,
+  undefined,
+  true, // unrefTimeout to not keep event loop going
+);
+
 class Agent {
   private nextTimeout: NodeJS.Timeout | undefined;
   private readonly requests = new Map<string, string | undefined>();
 
-  private readonly fundedToday = new Set<string>();
-  private readonly accessedToday = new Set<string>();
+  private readonly faucet: FaucetV1;
 
-  constructor(private readonly faucet: FaucetV1) {
-    new CronJob(
-      '0 0 * * *',
-      () => {
-        this.fundedToday.clear();
-        this.accessedToday.clear();
-      },
-      undefined,
-      true,
-      undefined,
-      undefined,
-      false,
-      undefined,
-      true, // unrefTimeout
-    );
+  constructor(faucetAddr: string, signer: ethers.Signer) {
+    if (!signer.provider) throw new Error('not connected');
+    this.faucet = FaucetV1__factory.connect(faucetAddr, signer);
   }
 
-  public mayRequest(requester: string | undefined, recipient: string): boolean {
-    return !(
-      this.requests.has(recipient) ||
-      this.fundedToday.has(recipient) ||
-      (requester !== undefined && this.accessedToday.has(requester))
-    );
+  public get provider(): ethers.providers.Provider {
+    return this.faucet.signer.provider!;
+  }
+
+  public hasPendingRequest(recipient: string): boolean {
+    return this.requests.has(recipient);
   }
 
   public addRequest(requester: string | undefined, recipient: string) {
     this.requests.set(recipient, requester ?? '');
     if (!this.nextTimeout) {
-      this.nextTimeout = setTimeout(() => this.payoutBatch(), 20_000);
+      this.nextTimeout = setTimeout(() => this.payoutBatch(), 60_000);
     }
   }
 
@@ -56,8 +61,8 @@ class Agent {
       console.error('failed to post funding tx:', e);
     }
     for (const [recipient, requester] of this.requests) {
-      if (requester) this.accessedToday.add(requester);
-      this.fundedToday.add(recipient);
+      if (requester) accessedToday.add(requester);
+      fundedToday.add(recipient);
     }
     this.requests.clear();
     this.nextTimeout = undefined;
@@ -66,17 +71,25 @@ class Agent {
 
 const hcaptchaSecret = process.env.HCAPTCHA_SECRET;
 if (!hcaptchaSecret) throw new Error('HCAPTCHA_SECRET not set');
-const faucetAddr =
-  process.env.FAUCET_ADDR ?? '0xd5D44cFdB2040eC9135930Ca75d9707717cafB92';
-const gwUrl = process.env.WEB3_GW_URL ?? 'https://testnet.sapphire.oasis.dev';
 const privateKey = process.env.AGENT_PRIVATE_KEY;
 if (!privateKey) throw new Error('AGENT_PRIVATE_KEY not set');
-const provider = ethers.getDefaultProvider(gwUrl);
 const wallet = new ethers.Wallet(privateKey);
 console.log('posting txs as', wallet.address);
-const signer = sapphire.wrap(wallet.connect(provider));
-const faucet = FaucetV1__factory.connect(faucetAddr, signer);
-const agent = new Agent(faucet);
+
+const agents = {
+  emerald: new Agent(
+    '0xA3ACe1150C4A437c6641B9d353123B3d513264b7',
+    wallet.connect(ethers.getDefaultProvider('https://emerald.oasis.dev')),
+  ),
+  sapphire: new Agent(
+    '0xd5D44cFdB2040eC9135930Ca75d9707717cafB92',
+    sapphire.wrap(
+      wallet.connect(
+        ethers.getDefaultProvider('https://testnet.sapphire.oasis.dev'),
+      ),
+    ),
+  ),
+};
 
 const app = express();
 
@@ -98,11 +111,24 @@ app.get('/request', (_req, res) => err(res, 405, 'method not allowed'));
 
 app.post('/request', async (req, res) => {
   const cfIp = req.headers['cf-connecting-ip'] as string;
-  const { token, address } = req.body;
+  const { token, address, network } = req.body;
+
+  if (
+    typeof network !== 'string' ||
+    (network !== 'emerald' && network !== 'sapphire')
+  ) {
+    return err(res, 400, 'invalid `network`');
+  }
+
   if (!token) return err(res, 400, 'missing `token`');
+
   if (typeof address !== 'string' || !ethers.utils.isAddress(address)) {
     return err(res, 400, 'missing or invalid `address`');
   }
+
+  if (fundedToday.has(address) || (cfIp && accessedToday.has(cfIp)))
+    return err(res, 429, 'you have already been funded');
+
   try {
     const { success } = await hcaptcha.verify(
       hcaptchaSecret,
@@ -110,16 +136,20 @@ app.post('/request', async (req, res) => {
       cfIp,
       HCAPTCHA_SITEKEY,
     );
-    if (!success) throw new Error('hCaptcha failed');
+    if (!success) throw new Error('unsuccessful');
   } catch (e: any) {
     return err(res, 401, 'hCaptcha failed');
   }
-  if (!agent.mayRequest(cfIp, address))
-    return err(res, 429, 'you have already been funded');
+
+  const agent = agents[network];
+
+  if (agent.hasPendingRequest(address))
+    return err(res, 429, 'funding still in progress');
+
   try {
     const [code, balance] = await Promise.all([
-      provider.getCode(address),
-      provider.getBalance(address),
+      agent.provider.getCode(address),
+      agent.provider.getBalance(address),
     ]);
     if (code !== '0x' && code !== '')
       return err(res, 400, 'the recipient may not be a contract');

@@ -18,12 +18,37 @@
         e.preventDefault();
         submitRequest();
       });
+
+      const $networkSelect = document.querySelector('select[name="network"]');
+      updateFaucetAddr($networkSelect);
+      $networkSelect.addEventListener('change', (e) => updateFaucetAddr(e.target));
     });
+
+    function updateFaucetAddr($networkSelect) {
+      const $faucetAddr = document.querySelector('#faucetAddr');
+      const net = $networkSelect.value;
+      let link;
+      let addr;
+      let amount;
+      if (net === 'sapphire') {
+        addr = '0xd5D44cFdB2040eC9135930Ca75d9707717cafB92';
+        link = `https://testnet.explorer.sapphire.oasis.dev/address/${addr}`;
+        amount = '0.0025';
+      } else {
+        addr = '0xA3ACe1150C4A437c6641B9d353123B3d513264b7';
+        link = `https://explorer.emerald.oasis.dev/address/${addr}`;
+        amount = '0.003';
+      }
+      $faucetAddr.setAttribute('href', link);
+      $faucetAddr.innerText = addr;
+      document.querySelector('input[type="submit"]').value = `Request ${amount} ROSE`;
+    }
 
     let hCaptchaToken = '';
 
     async function submitRequest() {
       const $address = document.querySelector('input[name="address"]');
+      const $network = document.querySelector('select[name="network"]');
       const $status = document.querySelector('#status');
       const $submit = document.querySelector('input[type="submit"]');
 
@@ -51,16 +76,18 @@
           body: JSON.stringify({
             address: $address.value,
             token: hCaptchaToken,
+            network: $network.value,
           }),
         });
         if (res.ok) {
           localStorage[dateKey] = true;
           $status.classList.add('success');
-          $status.innerText = "Your tokens should arrive soon. If not, please try again later.";
+          $status.innerText = "Please wait about a minute for your tokens to arrive.";
           return;
         }
+        let error;
         try {
-          const { error } = await res.json();
+          error = (await res.json()).error;
         } catch (e) {
           if (res.status === 429) throw new Error('rate limit exceeded');
           throw e;
@@ -118,14 +145,22 @@
     <header style="text-align:center;">
       <h1 style="margin-top:5%;line-height:1.4em;">ROSE Supply<br/>🌹📦</h1>
       <h2 style="font-size:1.2em">
-        ROSE Supply is a Mainnet faucet for the Oasis Sapphire ParaTime.
+        ROSE Supply is a Mainnet faucet for the Oasis EVM ParaTimes.
       </h2>
+      <p>You may request tokens from this faucet once every 24 hours.</p>
     </header>
     <main style="max-width:60ch;width:100%;margin:auto;margin-top:40px">
       <form style="border:3px solid #aaa;margin:auto;padding:5%;border-radius:10px;width:85%">
-        <label style="line-height:1.5em">
+        <label style="line-height:1.5em;display:block">
           <span>Address:</span>&nbsp;
           <input style="max-width:42ch;width:100%;" type="text" name="address" placeholder="0x..." pattern="0x[A-Fa-f0-9]{40}" required />
+        </label>
+        <label style="margin:20px auto;display:block;">
+          <span>Network:</span>&nbsp;
+          <select required name="network" aria-label="network" style="">
+            <option selected value="sapphire">Sapphire (Testnet)</option>
+            <option value="emerald">Emerald</option>
+          </select>
         </label>
         <div
           style="width:302px;height:76px"
@@ -135,11 +170,11 @@
           data-callback="postHCaptchaToken">
         </div>
         <p id="status" style="font-size:1rem;text-align:center;"></p>
-        <input style="display:block;margin:auto;" type="submit" value="Request 0.0025 ROSE" />
+        <input style="display:block;margin:auto;" type="submit" />
       </form>
       <p style="text-align:center;margin:25px auto;color:orchid">
         Preserve this service by sending ROSE to the faucet contract
-        <a style="color:orchid" href="https://testnet.explorer.sapphire.oasis.dev/address/0xd5D44cFdB2040eC9135930Ca75d9707717cafB92" target="_blank"><span style="text-align:center;display:block;margin:auto;font-family:monospace">0xd5D44cFdB2040eC9135930Ca75d9707717cafB92</span></a>
+        <a id="faucetAddr" style="color:orchid;text-align:center;display:block;margin:auto;font-family:monospace" target="_blank"></a>
       </p>
       <hr style="width:95%;margin:10px auto;"/>
       <section>
