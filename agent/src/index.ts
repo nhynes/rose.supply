@@ -2,7 +2,7 @@ import * as sapphire from '@oasisprotocol/sapphire-paratime';
 import cors from 'cors';
 import { CronJob } from 'cron';
 import { ethers } from 'ethers';
-import express, { Response } from 'express';
+import express, { Request, Response } from 'express';
 import * as hcaptcha from 'hcaptcha';
 
 import { FaucetV1, FaucetV1__factory } from 'rose-supply-contracts';
@@ -103,31 +103,43 @@ app.use(
 );
 app.use(express.json());
 
-function err(res: Response, status: number, msg: string) {
-  res.status(status).json({ error: msg }).end();
+function respondError(
+  res: Response,
+  status: number,
+  msg: string,
+  next?: (err?: any) => void,
+) {
+  try {
+    res.status(status).json({ error: msg }).end();
+  } catch (e: any) {
+    if (next) next(e);
+  }
 }
 
-app.get('/request', (_req, res) => err(res, 405, 'method not allowed'));
+app.get('/request', (_req, res) => {
+  respondError(res, 405, 'method not allowed');
+});
 
-app.post('/request', async (req, res) => {
-  const cfIp = req.headers['cf-connecting-ip'] as string;
+app.post('/request', async (req, res, next) => {
+  const err = (code: number, msg: string) => respondError(res, code, msg, next);
+
   const { token, address, network } = req.body;
 
   if (
     typeof network !== 'string' ||
     (network !== 'emerald' && network !== 'sapphire')
   ) {
-    return err(res, 400, 'invalid `network`');
+    return err(400, 'invalid `network`');
   }
 
-  if (!token) return err(res, 400, 'missing `token`');
+  if (!token) return err(400, 'missing `token`');
 
-  if (typeof address !== 'string' || !ethers.utils.isAddress(address)) {
-    return err(res, 400, 'missing or invalid `address`');
-  }
+  if (typeof address !== 'string' || !ethers.utils.isAddress(address))
+    return err(400, 'missing or invalid `address`');
 
+  const cfIp = req.headers['cf-connecting-ip'] as string;
   if (fundedToday.has(address) || (cfIp && accessedToday.has(cfIp)))
-    return err(res, 429, 'you have already been funded');
+    return err(429, 'you have already been funded');
 
   try {
     const { success } = await hcaptcha.verify(
@@ -138,13 +150,13 @@ app.post('/request', async (req, res) => {
     );
     if (!success) throw new Error('unsuccessful');
   } catch (e: any) {
-    return err(res, 401, 'hCaptcha failed');
+    return err(401, 'hCaptcha failed');
   }
 
   const agent = agents[network];
 
   if (agent.hasPendingRequest(address))
-    return err(res, 429, 'funding still in progress');
+    return err(429, 'funding still in progress');
 
   try {
     const [code, balance] = await Promise.all([
@@ -152,15 +164,30 @@ app.post('/request', async (req, res) => {
       agent.provider.getBalance(address),
     ]);
     if (code !== '0x' && code !== '')
-      return err(res, 400, 'the recipient may not be a contract');
+      return err(400, 'the recipient may not be a contract');
     if (balance >= ethers.utils.parseEther('.01'))
-      return err(res, 400, 'the recipient is too rich');
+      return err(400, 'the recipient is too rich');
   } catch (e) {
     console.error('failed to check recipient', e);
-    return err(res, 502, 'bad gateway');
+    return err(502, 'bad gateway');
   }
   agent.addRequest(cfIp, address);
-  res.status(204).end();
+  try {
+    res.status(204).end();
+  } catch (e: any) {
+    next(e);
+  }
+});
+
+app.get('*', (_req, res) => respondError(res, 404, 'not found'));
+app.post('*', (_req, res) => respondError(res, 404, 'not found'));
+app.head('*', (_req, res) => respondError(res, 405, 'bad method'));
+app.put('*', (_req, res) => respondError(res, 405, 'bad method'));
+app.delete('*', (_req, res) => respondError(res, 405, 'bad method'));
+
+app.use((e: any, _req: Request, res: Response) => {
+  console.error('uncaught error:', e);
+  respondError(res, 500, 'internal server error');
 });
 
 app.listen(80);
