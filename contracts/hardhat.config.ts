@@ -55,13 +55,8 @@ async function getSigner(): Promise<Signer> {
 }
 
 task(TASK_ADD_AGENT, 'Authorizes a new agent.')
-  .addParam(
-    'faucetAddr',
-    'The Faucet address.',
-    '0xd5D44cFdB2040eC9135930Ca75d9707717cafB92',
-    types.string,
-  )
-  .addParam('agentAddr', 'The agent address.', null, types.string)
+  .addParam('faucetAddr', 'The Faucet address.', undefined, types.string)
+  .addParam('agentAddr', 'The agent address.', undefined, types.string)
   .setAction(async (args) => {
     const { ethers } = await import('hardhat');
     const signer = await getSigner();
@@ -72,7 +67,7 @@ task(TASK_ADD_AGENT, 'Authorizes a new agent.')
     await tx.wait();
   });
 
-const privateKey = process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
+const privateKey = process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [];
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -102,7 +97,7 @@ const config: HardhatUserConfig = {
       accounts: privateKey,
     },
     'sapphire-mainnet': {
-      url: 'https://sapphire.oasis.dev',
+      url: 'https://sapphire.oasis.io',
       chainId: 0x5afe,
       accounts: privateKey,
     },

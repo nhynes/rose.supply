@@ -82,10 +82,10 @@ const agents = {
     wallet.connect(ethers.getDefaultProvider('https://emerald.oasis.dev')),
   ),
   sapphire: new Agent(
-    '0xd5D44cFdB2040eC9135930Ca75d9707717cafB92',
+    '0x8f3B45c1F73ebd50FE6C9Ff14881422A999fEA46',
     sapphire.wrap(
       wallet.connect(
-        ethers.getDefaultProvider('https://testnet.sapphire.oasis.dev'),
+        ethers.getDefaultProvider('https://sapphire.oasis.io'),
       ),
     ),
   ),
