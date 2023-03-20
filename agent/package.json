@@ -9,7 +9,6 @@
     "build": "tsc -b && esbuild src/index.ts --bundle --outfile=bin/rose-supply-agent.js --platform=node --target=node18 --minify"
   },
   "dependencies": {
-    "@oasisprotocol/sapphire-paratime": "^1.0.5",
     "cors": "^2.8.5",
     "cron": "^2.1.0",
     "ethers": "^5.7.1",

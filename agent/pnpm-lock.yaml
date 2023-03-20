@@ -19,8 +19,9 @@ specifiers:
   typescript: ^4.8.3
 
 dependencies:
-  '@oasisprotocol/sapphire-paratime': 1.0.5
+  '@oasisprotocol/sapphire-paratime': 1.0.15
   cors: 2.8.5
+  cron: 2.1.0
   ethers: 5.7.1
   express: 4.18.1
   hcaptcha: 0.1.1
@@ -32,7 +33,6 @@ devDependencies:
   '@types/express': 4.17.14
   '@typescript-eslint/eslint-plugin': 5.38.0_4gkcvl6qsi23tqqawfqgcwtp54
   '@typescript-eslint/parser': 5.38.0_7ilbxdl5iguzcjriqqcg2m5cku
-  cron: 2.1.0
   esbuild: 0.15.9
   eslint: 8.24.0
   eslint-config-prettier: 8.5.0_eslint@8.24.0
@@ -435,8 +435,8 @@ packages:
       fastq: 1.13.0
     dev: true
 
-  /@oasisprotocol/sapphire-paratime/1.0.5:
-    resolution: {integrity: sha512-e/e0SAmE/zrJ8C8Wrk/It2ubaZcaOqRusd/tU/vW+cTYNmqq7ZuP2vb5lg6H03EAxwo3GQwUU+KKUnQzbMiY9Q==}
+  /@oasisprotocol/sapphire-paratime/1.0.15:
+    resolution: {integrity: sha512-ElegTD1A0MXmvey2WTe66ebquKndAZXnyp5KFzYowguc7An9Xx5g3sFeT1OEhCSHUMEeuLWSWdp2mTkFmeeOug==}
     dependencies:
       '@ethersproject/abstract-provider': 5.7.0
       '@ethersproject/abstract-signer': 5.7.0
@@ -446,7 +446,7 @@ packages:
       '@ethersproject/providers': 5.7.1
       '@ethersproject/rlp': 5.7.0
       '@ethersproject/transactions': 5.7.0
-      cborg: 1.9.5
+      cborg: 1.10.1
       deoxysii: 0.0.2
       js-sha512: 0.8.0
       tweetnacl: 1.0.3
@@ -791,8 +791,8 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /cborg/1.9.5:
-    resolution: {integrity: sha512-fLBv8wmqtlXqy1Yu+pHzevAIkW6k2K0ZtMujNzWphLsA34vzzg9BHn+5GmZqOJkSA9V7EMKsWrf6K976c1QMjQ==}
+  /cborg/1.10.1:
+    resolution: {integrity: sha512-et6Qm8MOUY2kCWa5GKk2MlBVoPjHv0hQBmlzI/Z7+5V3VJCeIkGehIB3vWknNsm2kOkAIs6wEKJFJo8luWQQ/w==}
     hasBin: true
     dev: false
 
@@ -852,7 +852,7 @@ packages:
     resolution: {integrity: sha512-Hq7u3P8y7UWYvsZbSKHHJDVG0VO9O7tp2qljxzTScelcTODBfCme8AIhnZsFwmQ9NchZ3hr2uNr+s3DSms7q6w==}
     dependencies:
       luxon: 1.28.0
-    dev: true
+    dev: false
 
   /cross-spawn/7.0.3:
     resolution: {integrity: sha512-iRDPJKUPVEND7dHPO8rkbOnPpyDygcDFtWjpeWNCgy8WP2rXcxXL8TskReQl6OrB2G7+UJrags1q15Fudc7G6w==}
@@ -1689,7 +1689,7 @@ packages:
 
   /luxon/1.28.0:
     resolution: {integrity: sha512-TfTiyvZhwBYM/7QdAVDh+7dBTBA29v4ik0Ce9zda3Mnf8on1S5KJI8P2jKFZ8+5C0jhmr0KwJEO/Wdpm0VeWJQ==}
-    dev: true
+    dev: false
 
   /media-typer/0.3.0:
     resolution: {integrity: sha1-hxDXrwqmJvj/+hzgAWhUUmMlV0g=}

@@ -1,4 +1,3 @@
-import * as sapphire from '@oasisprotocol/sapphire-paratime';
 import cors from 'cors';
 import { CronJob } from 'cron';
 import { ethers } from 'ethers';
@@ -56,7 +55,7 @@ class Agent {
   private async payoutBatch(): Promise<void> {
     try {
       const tx = await this.faucet.payoutBatch([...this.requests.keys()]);
-      console.log('funding', this.requests.size, 'addresses in', tx.hash);
+      console.log('funding', this.requests.size, 'address(es) in', tx.hash);
     } catch (e: any) {
       console.error('failed to post funding tx:', e);
     }
@@ -83,11 +82,7 @@ const agents = {
   ),
   sapphire: new Agent(
     '0x8f3B45c1F73ebd50FE6C9Ff14881422A999fEA46',
-    sapphire.wrap(
-      wallet.connect(
-        ethers.getDefaultProvider('https://sapphire.oasis.io'),
-      ),
-    ),
+    wallet.connect(ethers.getDefaultProvider('https://sapphire.oasis.io')),
   ),
 };
 
