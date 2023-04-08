@@ -32,7 +32,8 @@ class Agent {
 
   private readonly faucet: FaucetV1;
 
-  constructor(faucetAddr: string, signer: ethers.Signer) {
+  constructor(faucetAddr: string, signerFactory: () => ethers.Signer) {
+    const signer = signerFactory();
     if (!signer.provider) throw new Error('not connected');
     this.faucet = FaucetV1__factory.connect(faucetAddr, signer);
   }
@@ -75,14 +76,21 @@ if (!privateKey) throw new Error('AGENT_PRIVATE_KEY not set');
 const wallet = new ethers.Wallet(privateKey);
 console.log('posting txs as', wallet.address);
 
+const rawEmeraldWallet = wallet.connect(
+  ethers.getDefaultProvider('https://emerald.oasis.dev'),
+);
+const rawSapphireWallet = wallet.connect(
+  ethers.getDefaultProvider('https://sapphire.oasis.io'),
+);
+
 const agents = {
   emerald: new Agent(
     '0xA3ACe1150C4A437c6641B9d353123B3d513264b7',
-    wallet.connect(ethers.getDefaultProvider('https://emerald.oasis.dev')),
+    () => rawEmeraldWallet,
   ),
   sapphire: new Agent(
     '0x8f3B45c1F73ebd50FE6C9Ff14881422A999fEA46',
-    wallet.connect(ethers.getDefaultProvider('https://sapphire.oasis.io')),
+    () => rawSapphireWallet
   ),
 };
 
