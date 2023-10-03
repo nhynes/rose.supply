@@ -54,7 +54,9 @@ class Agent {
 
   private async payoutBatch(): Promise<void> {
     try {
-      const tx = await this.faucet.payoutBatch([...this.requests.keys()]);
+      const tx = await this.faucet.payoutBatch([...this.requests.keys()], {
+        gasLimit: 300_000,
+      });
       console.log('funding', this.requests.size, 'address(es) in', tx.hash);
     } catch (e: any) {
       console.error('failed to post funding tx:', e);
@@ -185,4 +187,4 @@ app.use((e: any, _req: Request, res: Response) => {
   respondError(res, 500, 'internal server error');
 });
 
-app.listen(80);
+app.listen(2641);
