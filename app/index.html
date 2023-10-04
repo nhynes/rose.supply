@@ -1,161 +1,201 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta
-      name="description"
-      content="Oasis Network Mainnet Faucet"
+    <meta name="description" content="Oasis Network Mainnet Faucet" />
+    <link
+      href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQEAYAAABPYyMiAAAABmJLR0T///////8JWPfcAAAACXBIWXMAAABIAAAASABGyWs+AAAAF0lEQVRIx2NgGAWjYBSMglEwCkbBSAcACBAAAeaR9cIAAAAASUVORK5CYII="
+      rel="icon"
+      type="image/x-icon"
     />
-    <link href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQEAYAAABPYyMiAAAABmJLR0T///////8JWPfcAAAACXBIWXMAAABIAAAASABGyWs+AAAAF0lEQVRIx2NgGAWjYBSMglEwCkbBSAcACBAAAeaR9cIAAAAASUVORK5CYII=" rel="icon" type="image/x-icon" />
     <title>🌹📦 ROSE Supply</title>
     <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
     <script type="application/javascript" defer>
-    window.addEventListener('DOMContentLoaded', () => {
-      document.querySelector('form').addEventListener('submit', (e) => {
-        e.target.checkValidity();
-        e.target.reportValidity();
-        e.preventDefault();
-        submitRequest();
+      window.addEventListener('DOMContentLoaded', () => {
+        document.querySelector('form').addEventListener('submit', (e) => {
+          e.target.checkValidity();
+          e.target.reportValidity();
+          e.preventDefault();
+          submitRequest();
+        });
+
+        const $networkSelect = document.querySelector('select[name="network"]');
+        updateFaucetAddr($networkSelect);
+        $networkSelect.addEventListener('change', (e) =>
+          updateFaucetAddr(e.target),
+        );
       });
 
-      const $networkSelect = document.querySelector('select[name="network"]');
-      updateFaucetAddr($networkSelect);
-      $networkSelect.addEventListener('change', (e) => updateFaucetAddr(e.target));
-    });
-
-    function updateFaucetAddr($networkSelect) {
-      const $faucetAddr = document.querySelector('#faucetAddr');
-      const net = $networkSelect.value;
-      let link;
-      let addr;
-      let amount;
-      if (net === 'sapphire') {
-        addr = '0x8f3B45c1F73ebd50FE6C9Ff14881422A999fEA46';
-        link = `https://explorer.oasis.io/mainnet/sapphire/address/${addr}`;
-        amount = '0.003';
-      } else {
-        addr = '0xA3ACe1150C4A437c6641B9d353123B3d513264b7';
-        link = `https://explorer.oasis.io/mainnet/emerald/address/${addr}`;
-        amount = '0.003';
-      }
-      $faucetAddr.setAttribute('href', link);
-      $faucetAddr.innerText = addr;
-      document.querySelector('input[type="submit"]').value = `Request ${amount} ROSE`;
-    }
-
-    let hCaptchaToken = '';
-
-    async function submitRequest() {
-      const $address = document.querySelector('input[name="address"]');
-      const $network = document.querySelector('select[name="network"]');
-      const $status = document.querySelector('#status');
-      const $submit = document.querySelector('input[type="submit"]');
-
-      $status.innerText = '';
-      if (!hCaptchaToken) {
-        $status.classList.add('error');
-        $status.innerText = "Please complete the hCaptcha.";
-        return;
+      function updateFaucetAddr($networkSelect) {
+        const $faucetAddr = document.querySelector('#faucetAddr');
+        const net = $networkSelect.value;
+        let link;
+        let addr;
+        let amount;
+        if (net === 'sapphire') {
+          addr = '0x8f3B45c1F73ebd50FE6C9Ff14881422A999fEA46';
+          link = `https://explorer.oasis.io/mainnet/sapphire/address/${addr}`;
+          amount = '0.003';
+        } else {
+          addr = '0xA3ACe1150C4A437c6641B9d353123B3d513264b7';
+          link = `https://explorer.oasis.io/mainnet/emerald/address/${addr}`;
+          amount = '0.003';
+        }
+        $faucetAddr.setAttribute('href', link);
+        $faucetAddr.innerText = addr;
+        document.querySelector(
+          'input[type="submit"]',
+        ).value = `Request ${amount} ROSE`;
       }
 
-      const dateKey = new Date().toDateString();
-      if (localStorage[dateKey]) {
-        $status.classList.add('error');
-        $status.innerText = "You have already been funded today.";
-        return;
-      }
+      let hCaptchaToken = '';
 
-      $submit.setAttribute('disabled', true);
-      try {
-        const res = await fetch('https://api.rose.supply/request', {
-          method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-          },
-          body: JSON.stringify({
-            address: $address.value,
-            token: hCaptchaToken,
-            network: $network.value,
-          }),
-        });
-        if (res.ok) {
-          localStorage[dateKey] = true;
-          $status.classList.add('success');
-          $status.innerText = "Please wait about a minute for your tokens to arrive.";
+      async function submitRequest() {
+        const $address = document.querySelector('input[name="address"]');
+        const $network = document.querySelector('select[name="network"]');
+        const $status = document.querySelector('#status');
+        const $submit = document.querySelector('input[type="submit"]');
+
+        $status.innerText = '';
+        if (!hCaptchaToken) {
+          $status.classList.add('error');
+          $status.innerText = 'Please complete the hCaptcha.';
           return;
         }
-        let error;
-        try {
-          error = (await res.json()).error;
-        } catch (e) {
-          if (res.status === 429) throw new Error('rate limit exceeded');
-          throw e;
-        }
-        throw new Error(error);
-      } catch(e) {
-        $status.classList.add('error');
-        $status.innerText = `Error: ${e.message}` ?? 'An unknown error occured.';
-        $submit.removeAttribute('disabled', false);
-      }
-    }
 
-    function postHCaptchaToken(token) {
-      hCaptchaToken = token;
-    }
+        const dateKey = new Date().toDateString();
+        if (localStorage[dateKey]) {
+          $status.classList.add('error');
+          $status.innerText = 'You have already been funded today.';
+          return;
+        }
+
+        $submit.setAttribute('disabled', true);
+        try {
+          const res = await fetch('https://api.rose.supply/request', {
+            method: 'POST',
+            headers: {
+              'content-type': 'application/json',
+            },
+            body: JSON.stringify({
+              address: $address.value,
+              token: hCaptchaToken,
+              network: $network.value,
+            }),
+          });
+          if (res.ok) {
+            localStorage[dateKey] = true;
+            $status.classList.add('success');
+            $status.innerText =
+              'Please wait about a minute for your tokens to arrive.';
+            return;
+          }
+          let error;
+          try {
+            error = (await res.json()).error;
+          } catch (e) {
+            if (res.status === 429) throw new Error('rate limit exceeded');
+            throw e;
+          }
+          throw new Error(error);
+        } catch (e) {
+          $status.classList.add('error');
+          $status.innerText =
+            `Error: ${e.message}` ?? 'An unknown error occured.';
+          $submit.removeAttribute('disabled', false);
+        }
+      }
+
+      function postHCaptchaToken(token) {
+        hCaptchaToken = token;
+      }
     </script>
     <style type="text/css">
-    html, body {
-      margin: 0;
-      padding: 0;
-    }
-    body {
-      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-      color: #afafaf;
-      background-color: #1a1a1a;
-    }
-    body, main {
-      box-sizing: border-box;
-    }
-    h1,h2,h3 {
-      font-weight: normal;
-    }
-    .h-captcha {
-      margin: 30px auto;
-    }
-    p {
-      font-size: 1.1em;
-      line-height: 1.4em;
-    }
-    .error {
-      color: crimson;
-    }
-    .success {
-      color: green;
-    }
-    a {
-      color: #afafaf;
-    }
-    section {
-      padding: 0 3%;
-    }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family:
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          'Helvetica Neue',
+          Arial,
+          'Noto Sans',
+          sans-serif,
+          'Apple Color Emoji',
+          'Segoe UI Emoji',
+          'Segoe UI Symbol',
+          'Noto Color Emoji';
+        color: #afafaf;
+        background-color: #1a1a1a;
+      }
+      body,
+      main {
+        box-sizing: border-box;
+      }
+      h1,
+      h2,
+      h3 {
+        font-weight: normal;
+      }
+      .h-captcha {
+        margin: 30px auto;
+      }
+      p {
+        font-size: 1.1em;
+        line-height: 1.4em;
+      }
+      .error {
+        color: crimson;
+      }
+      .success {
+        color: green;
+      }
+      a {
+        color: #afafaf;
+      }
+      section {
+        padding: 0 3%;
+      }
     </style>
   </head>
   <body>
-    <header style="text-align:center;">
-      <h1 style="margin-top:5%;line-height:1.4em;">ROSE Supply<br/>🌹📦</h1>
-      <h2 style="font-size:1.2em">
+    <header style="text-align: center">
+      <h1 style="margin-top: 5%; line-height: 1.4em">ROSE Supply<br />🌹📦</h1>
+      <h2 style="font-size: 1.2em">
         ROSE Supply is a Mainnet faucet for the Oasis EVM ParaTimes.
       </h2>
       <p>You may request tokens from this faucet once every 24 hours.</p>
     </header>
-    <main style="max-width:60ch;width:100%;margin:auto;margin-top:40px">
-      <form style="border:3px solid #aaa;margin:auto;padding:5%;border-radius:10px;width:85%">
-        <label style="line-height:1.5em;display:block">
+    <main style="max-width: 60ch; width: 100%; margin: auto; margin-top: 40px">
+      <form
+        style="
+          border: 3px solid #aaa;
+          margin: auto;
+          padding: 5%;
+          border-radius: 10px;
+          width: 85%;
+        "
+      >
+        <label style="line-height: 1.5em; display: block">
           <span>Address:</span>&nbsp;
-          <input style="max-width:42ch;width:100%;" type="text" name="address" placeholder="0x..." pattern="0x[A-Fa-f0-9]{40}" required />
+          <input
+            style="max-width: 42ch; width: 100%"
+            type="text"
+            name="address"
+            placeholder="0x..."
+            pattern="0x[A-Fa-f0-9]{40}"
+            required
+          />
         </label>
-        <label style="margin:20px auto;display:block;">
+        <label style="margin: 20px auto; display: block">
           <span>Network:</span>&nbsp;
           <select required name="network" aria-label="network" style="">
             <option selected value="sapphire">Sapphire</option>
@@ -163,51 +203,103 @@
           </select>
         </label>
         <div
-          style="width:302px;height:76px"
+          style="width: 302px; height: 76px"
           class="h-captcha"
           data-sitekey="fd74b3a8-7fac-467f-be40-5c525e79ac83"
           data-theme="dark"
-          data-callback="postHCaptchaToken">
-        </div>
-        <p id="status" style="font-size:1rem;text-align:center;"></p>
-        <input style="display:block;margin:auto;" type="submit" />
+          data-callback="postHCaptchaToken"
+        ></div>
+        <p id="status" style="font-size: 1rem; text-align: center"></p>
+        <input style="display: block; margin: auto" type="submit" />
       </form>
-      <p style="text-align:center;margin:25px auto;color:crimson">
+      <p style="text-align: center; margin: 25px auto; color: crimson">
         Preserve this service by sending ROSE to the faucet contract
-        <a id="faucetAddr" style="color:orchid;text-align:center;display:block;margin:auto;font-family:monospace" target="_blank"></a>
+        <a
+          id="faucetAddr"
+          style="
+            color: orchid;
+            text-align: center;
+            display: block;
+            margin: auto;
+            font-family: monospace;
+          "
+          target="_blank"
+        ></a>
         or the faucet executor
-        <a style="color:orchid" href="https://testnet.explorer.sapphire.oasis.dev/address/0x9997a31D8C6112F0D033E3196beA56C62D6bF105" target="_blank"><span style="text-align:center;display:block;margin:auto;font-family:monospace">0x9997a31D8C6112F0D033E3196beA56C62D6bF105</span></a>
+        <a
+          style="color: orchid"
+          href="https://testnet.explorer.sapphire.oasis.dev/address/0x9997a31D8C6112F0D033E3196beA56C62D6bF105"
+          target="_blank"
+          ><span
+            style="
+              text-align: center;
+              display: block;
+              margin: auto;
+              font-family: monospace;
+            "
+            >0x9997a31D8C6112F0D033E3196beA56C62D6bF105</span
+          ></a
+        >
       </p>
-      <hr style="width:95%;margin:10px auto;"/>
+      <hr style="width: 95%; margin: 10px auto" />
       <section>
         <h2 id="why">Why?</h2>
         <p>
-          If you need to pay gas fees but are out of ROSE, you can request some from this faucet.
-          It will give you enough to pay for one token transfer, which you should use to acquire more ROSE.
+          If you need to pay gas fees but are out of ROSE, you can request some
+          from this faucet. It will give you enough to pay for one token
+          transfer, which you should use to acquire more ROSE.
         </p>
         <p>
-          If the faucet helped you in your time of need, please donate ROSE to the addresses listed above.
-          Your donation will improve the strength and security of the Sapphire community.
+          If the faucet helped you in your time of need, please donate ROSE to
+          the addresses listed above. Your donation will improve the strength
+          and security of the Sapphire community.
         </p>
       </section>
       <section>
         <h2 id="privacy">Privacy</h2>
         <p>
-          This service does not store identifying information like IP address, but your ISP, your browser extensions, Cloudflare, GCP, hCaptcha, or the Sapphire Web3 gateway might. This list is non-exhaustive.
+          This service does not store identifying information like IP address,
+          but your ISP, your browser extensions, Cloudflare, GCP, hCaptcha, or
+          the Sapphire Web3 gateway might. This list is non-exhaustive.
         </p>
         <p>
-          This service must post your wallet address to a public ledger where it may be easily linked with any exposed identifying information.
+          This service must post your wallet address to a public ledger where it
+          may be easily linked with any exposed identifying information.
         </p>
       </section>
       <section>
         <h2 id="accountability">Accountability</h2>
         <p>
-          The faucet is a <a href="https://github.com/nhynes/rose.supply/blob/main/contracts/contracts/FaucetV1.sol" target="_blank">contract</a> controlled by an off-chain <a href="https://github.com/nhynes/rose.supply/blob/main/agent/src/index.ts" target="_blank">agent</a>.
-          The contract holds all of the funds, but the agent decides who to award them to.
+          The faucet is a
+          <a
+            href="https://github.com/nhynes/rose.supply/blob/main/contracts/contracts/FaucetV1.sol"
+            target="_blank"
+            >contract</a
+          >
+          controlled by an off-chain
+          <a
+            href="https://github.com/nhynes/rose.supply/blob/main/agent/src/index.ts"
+            target="_blank"
+            >agent</a
+          >. The contract holds all of the funds, but the agent decides who to
+          award them to.
         </p>
         <p>
-          Although the agent must be trusted to enqueue requests, it cannot deplete the donation pool because the maximum payout is <a href="https://github.com/nhynes/rose.supply/blob/9727ead/contracts/contracts/FaucetV1.sol#L82" target="_blank">capped</a> and the number of payouts per day is also <a href="https://github.com/nhynes/rose.supply/blob/9727ead/contracts/contracts/FaucetV1.sol#L90" target="_blank">capped</a>.
-          The worst that can happen is the payout caps getting set to zero or the agent disappearing, but there's not much incentive for either of those things.
+          Although the agent must be trusted to enqueue requests, it cannot
+          deplete the donation pool because the maximum payout is
+          <a
+            href="https://github.com/nhynes/rose.supply/blob/9727ead/contracts/contracts/FaucetV1.sol#L82"
+            target="_blank"
+            >capped</a
+          >
+          and the number of payouts per day is also
+          <a
+            href="https://github.com/nhynes/rose.supply/blob/9727ead/contracts/contracts/FaucetV1.sol#L90"
+            target="_blank"
+            >capped</a
+          >. The worst that can happen is the payout caps getting set to zero or
+          the agent disappearing, but there's not much incentive for either of
+          those things.
         </p>
       </section>
       <section>
